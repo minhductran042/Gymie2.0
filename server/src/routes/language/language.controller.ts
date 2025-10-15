@@ -42,8 +42,8 @@ export class LanguageController {
 
     @Delete(':languageId')
     @ZodSerializerDto(MessageResDTO)
-    delete(@Param() params: GetLanguageParamsDTO) {
-        return this.languageService.delete(params.languageId)
+    delete(@Param() params: GetLanguageParamsDTO, @ActiveUser('userId') deletedById: number) {
+        return this.languageService.delete(params.languageId, deletedById)
     }
 
     

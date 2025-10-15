@@ -82,7 +82,7 @@ export class PermissionRepository {
         return updatedPermission
     }
 
-    delete(permissionId: number, isHard? : boolean) : Promise<PermissionType> {
+    delete(permissionId: number, deletedById: number, isHard? : boolean) : Promise<PermissionType> {
         return isHard ? 
         this.prismaService.permission.delete({
             where: {
@@ -94,7 +94,8 @@ export class PermissionRepository {
                 id: permissionId
             },           
             data: {
-                deletedAt: new Date()
+                deletedAt: new Date(),
+                deletedById
             }
         })
 

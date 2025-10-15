@@ -44,7 +44,7 @@ export class RoleController {
     @Delete(':roleId')
     @ZodSerializerDto(MessageResDTO)
     delete(@Param() param: GetRoleParamsDTO, @ActiveUser('userId') deletedById: number) {
-        return this.roleService.delete(param.roleId)
+        return this.roleService.delete(param.roleId, deletedById)
     }
 
 }

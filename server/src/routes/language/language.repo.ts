@@ -52,7 +52,7 @@ export class LanguageRepository {
         }) as any // as any để tránh lỗi type của prisma
     }
 
-    delete(languageId: string, isHard? : boolean) : Promise<LanguageType> {
+    delete(languageId: string, deletedById: number, isHard? : boolean) : Promise<LanguageType> {
         if(isHard) {
             return this.prismaService.language.delete({
                 where: {
@@ -66,7 +66,8 @@ export class LanguageRepository {
                     deletedAt: null
                 }, 
                 data: {
-                    deletedAt: new Date()
+                    deletedAt: new Date(),
+                    deletedById
                 }
             })
         }

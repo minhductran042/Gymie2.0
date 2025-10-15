@@ -72,12 +72,12 @@ export class RoleService {
         }
     }
 
-    async delete(roleId: number) {
+    async delete(roleId: number, deletedById: number) {
         try {
             // Kiểm tra base role trước khi delete
             await this.verifyRole(roleId)
 
-            await this.roleRepo.delete(roleId)
+            await this.roleRepo.delete(roleId, deletedById)
             return "Delete Role Successfully"
         } catch(error) {
             if(isUniqueConstraintPrismaError(error)) {

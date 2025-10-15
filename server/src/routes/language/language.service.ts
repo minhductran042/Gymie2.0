@@ -70,14 +70,14 @@ export class LanguageService {
        }
     }
 
-    async delete(id: string) {
+    async delete(id: string, deletedById: number) {
        try {
 
         const language = this.languageRepository.findById(id)
         if(!language) {
             throw NotFoundRecordException
         }
-        await this.languageRepository.delete(id, true)
+        await this.languageRepository.delete(id, deletedById, true)
         return {
             message: 'Delete language successfully'
         }

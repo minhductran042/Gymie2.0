@@ -67,7 +67,7 @@ export class PermissionService {
         }
     }
 
-    async delete(permissionId: number) {
+    async delete(permissionId: number, deletedById: number) {
         try {
 
             const permission = await this.permissionRepo.findById(permissionId)
@@ -75,7 +75,7 @@ export class PermissionService {
                 throw NotFoundRecordException
             }
 
-            await this.permissionRepo.delete(permissionId)
+            await this.permissionRepo.delete(permissionId, deletedById)
             return {
                 message: 'Delete permission successfully'
             }

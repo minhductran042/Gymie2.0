@@ -11,7 +11,8 @@ export const RoleShema = z.object({
     updatedById: z.number().nullable(),
     createdAt: z.date(),
     updatedAt: z.date(),
-    deletedAt: z.date().nullable()
+    deletedAt: z.date().nullable(),
+    deletedById: z.number().nullable(),
 })
 
 export const RoleWithPermissionsSchema = RoleShema.extend({
