@@ -7,11 +7,13 @@ import { ZodSerializerInterceptor } from 'nestjs-zod';
 import { HttpExceptionFilter } from './shared/filters/http-exception.filter';
 import { AuthModule } from './routes/auth/auth.module';
 import { SharedModule } from './shared/shared.module';
+import { LanguageModule } from './routes/language/language.module';
 
 @Module({
   imports: [
     AuthModule,
-    SharedModule
+    SharedModule,
+    LanguageModule
   ],
   controllers: [AppController],
   providers: [AppService , 

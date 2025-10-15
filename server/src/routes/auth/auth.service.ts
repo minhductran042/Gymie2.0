@@ -83,14 +83,14 @@ export class AuthService {
                 password: hashedPassword,
                 roleId: clientRoleId,
             }), 
-                this.authRepository.deleteVerificationCode(
-                    {
-                        email_type : {
-                            email: body.email,
-                            type: TypeOfVerificationCode.REGISTER
-                        }
+            this.authRepository.deleteVerificationCode(
+                {
+                    email_type : {
+                        email: body.email,
+                        type: TypeOfVerificationCode.REGISTER
                     }
-                )
+                }
+            )
         
             ])
             return user
