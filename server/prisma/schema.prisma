@@ -1,0 +1,1003 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==================== ENUMS ====================
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum VerificationCodeType {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+  TWO_FACTOR
+}
+
+enum TrainerClientStatus {
+  PENDING
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum WorkoutStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  SKIPPED
+  CANCELLED
+}
+
+// ==================== CORE ENTITIES ====================
+
+model Language {
+  id        String    @id @db.VarChar(10)
+  name      String    @unique
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  createdBy   User? @relation("LanguageCreatedBy", fields: [createdById], references: [id])
+  createdById Int?
+  updatedBy   User? @relation("LanguageUpdatedBy", fields: [updatedById], references: [id])
+  updatedById Int?
+  deletedBy   User? @relation("LanguageDeletedBy", fields: [deletedById], references: [id])
+  deletedById Int?
+
+  userTranslations                UserTranslation[]
+  trainerTranslations             TrainerTranslation[]
+  exerciseCategoryTranslations    ExerciseCategoryTranslation[]
+  muscleGroupTranslations         MuscleGroupTranslation[]
+  equipmentTranslations           EquipmentTranslation[]
+  exerciseTranslations            ExerciseTranslation[]
+  workoutTemplateTranslations     WorkoutTemplateTranslation[]
+  foodItemTranslations            FoodItemTranslation[]
+
+  @@index([deletedAt])
+}
+
+model User {
+  id            Int        @id @default(autoincrement())
+  email         String     @unique
+  name          String
+  password      String
+  phoneNumber   String
+  avatar        String?
+  dateOfBirth   DateTime?
+  gender        String?
+  totpSecret    String?
+  status        UserStatus @default(ACTIVE)
+  roleId        Int
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  deletedAt     DateTime?
+
+  role        Role  @relation(fields: [roleId], references: [id])
+  createdBy   User? @relation("UserCreatedBy", fields: [createdById], references: [id])
+  createdById Int?
+  updatedBy   User? @relation("UserUpdatedBy", fields: [updatedById], references: [id])
+  updatedById Int?
+  deletedBy   User? @relation("UserDeletedBy", fields: [deletedById], references: [id])
+  deletedById Int?
+
+  // Self-referencing relations
+  createdUsers User[] @relation("UserCreatedBy")
+  updatedUsers User[] @relation("UserUpdatedBy")
+  deletedUsers User[] @relation("UserDeletedBy")
+
+  profile              UserProfile?
+  translations         UserTranslation[]
+  trainer              Trainer?
+  trainerReviews       TrainerReview[]
+  clientRelationships  TrainerClient[]        @relation("ClientRelationships")
+  refreshTokens        RefreshToken[]
+  workouts             Workout[]
+  meals                Meal[]
+  nutritionGoals       NutritionGoal[]
+  waterIntakes         WaterIntake[]
+  bodyMeasurements     BodyMeasurement[]
+  devices              Device[]
+
+  // Created/Updated/Deleted by relations
+  createdLanguages                 Language[]                   @relation("LanguageCreatedBy")
+  updatedLanguages                 Language[]                   @relation("LanguageUpdatedBy")
+  deletedLanguages                 Language[]                   @relation("LanguageDeletedBy")
+  createdUserTranslations          UserTranslation[]            @relation("UserTranslationCreatedBy")
+  updatedUserTranslations          UserTranslation[]            @relation("UserTranslationUpdatedBy")
+  deletedUserTranslations          UserTranslation[]            @relation("UserTranslationDeletedBy")
+  createdUserProfiles              UserProfile[]                @relation("UserProfileCreatedBy")
+  updatedUserProfiles              UserProfile[]                @relation("UserProfileUpdatedBy")
+  deletedUserProfiles              UserProfile[]                @relation("UserProfileDeletedBy")
+  createdPermissions               Permission[]                 @relation("PermissionCreatedBy")
+  updatedPermissions               Permission[]                 @relation("PermissionUpdatedBy")
+  deletedPermissions               Permission[]                 @relation("PermissionDeletedBy")
+  createdRoles                     Role[]                       @relation("RoleCreatedBy")
+  updatedRoles                     Role[]                       @relation("RoleUpdatedBy")
+  deletedRoles                     Role[]                       @relation("RoleDeletedBy")
+  createdTrainers                  Trainer[]                    @relation("TrainerCreatedBy")
+  updatedTrainers                  Trainer[]                    @relation("TrainerUpdatedBy")
+  deletedTrainers                  Trainer[]                    @relation("TrainerDeletedBy")
+  createdTrainerTranslations       TrainerTranslation[]         @relation("TrainerTranslationCreatedBy")
+  updatedTrainerTranslations       TrainerTranslation[]         @relation("TrainerTranslationUpdatedBy")
+  deletedTrainerTranslations       TrainerTranslation[]         @relation("TrainerTranslationDeletedBy")
+  createdTrainerReviews            TrainerReview[]              @relation("TrainerReviewCreatedBy")
+  updatedTrainerReviews            TrainerReview[]              @relation("TrainerReviewUpdatedBy")
+  deletedTrainerReviews            TrainerReview[]              @relation("TrainerReviewDeletedBy")
+  createdTrainerClients            TrainerClient[]              @relation("TrainerClientCreatedBy")
+  updatedTrainerClients            TrainerClient[]              @relation("TrainerClientUpdatedBy")
+  deletedTrainerClients            TrainerClient[]              @relation("TrainerClientDeletedBy")
+  createdExerciseCategories        ExerciseCategory[]           @relation("ExerciseCategoryCreatedBy")
+  updatedExerciseCategories        ExerciseCategory[]           @relation("ExerciseCategoryUpdatedBy")
+  deletedExerciseCategories        ExerciseCategory[]           @relation("ExerciseCategoryDeletedBy")
+  createdExerciseCategoryTranslations ExerciseCategoryTranslation[] @relation("ExerciseCategoryTranslationCreatedBy")
+  updatedExerciseCategoryTranslations ExerciseCategoryTranslation[] @relation("ExerciseCategoryTranslationUpdatedBy")
+  deletedExerciseCategoryTranslations ExerciseCategoryTranslation[] @relation("ExerciseCategoryTranslationDeletedBy")
+  createdMuscleGroups              MuscleGroup[]                @relation("MuscleGroupCreatedBy")
+  updatedMuscleGroups              MuscleGroup[]                @relation("MuscleGroupUpdatedBy")
+  deletedMuscleGroups              MuscleGroup[]                @relation("MuscleGroupDeletedBy")
+  createdMuscleGroupTranslations   MuscleGroupTranslation[]     @relation("MuscleGroupTranslationCreatedBy")
+  updatedMuscleGroupTranslations   MuscleGroupTranslation[]     @relation("MuscleGroupTranslationUpdatedBy")
+  deletedMuscleGroupTranslations   MuscleGroupTranslation[]     @relation("MuscleGroupTranslationDeletedBy")
+  createdEquipments                Equipment[]                  @relation("EquipmentCreatedBy")
+  updatedEquipments                Equipment[]                  @relation("EquipmentUpdatedBy")
+  deletedEquipments                Equipment[]                  @relation("EquipmentDeletedBy")
+  createdEquipmentTranslations     EquipmentTranslation[]       @relation("EquipmentTranslationCreatedBy")
+  updatedEquipmentTranslations     EquipmentTranslation[]       @relation("EquipmentTranslationUpdatedBy")
+  deletedEquipmentTranslations     EquipmentTranslation[]       @relation("EquipmentTranslationDeletedBy")
+  createdExercises                 Exercise[]                   @relation("ExerciseCreatedBy")
+  updatedExercises                 Exercise[]                   @relation("ExerciseUpdatedBy")
+  deletedExercises                 Exercise[]                   @relation("ExerciseDeletedBy")
+  createdExerciseTranslations      ExerciseTranslation[]        @relation("ExerciseTranslationCreatedBy")
+  updatedExerciseTranslations      ExerciseTranslation[]        @relation("ExerciseTranslationUpdatedBy")
+  deletedExerciseTranslations      ExerciseTranslation[]        @relation("ExerciseTranslationDeletedBy")
+  createdWorkoutTemplates          WorkoutTemplate[]            @relation("WorkoutTemplateCreatedBy")
+  updatedWorkoutTemplates          WorkoutTemplate[]            @relation("WorkoutTemplateUpdatedBy")
+  deletedWorkoutTemplates          WorkoutTemplate[]            @relation("WorkoutTemplateDeletedBy")
+  createdWorkoutTemplateTranslations WorkoutTemplateTranslation[] @relation("WorkoutTemplateTranslationCreatedBy")
+  updatedWorkoutTemplateTranslations WorkoutTemplateTranslation[] @relation("WorkoutTemplateTranslationUpdatedBy")
+  deletedWorkoutTemplateTranslations WorkoutTemplateTranslation[] @relation("WorkoutTemplateTranslationDeletedBy")
+  createdWorkoutTemplateExercises  WorkoutTemplateExercise[]    @relation("WorkoutTemplateExerciseCreatedBy")
+  updatedWorkoutTemplateExercises  WorkoutTemplateExercise[]    @relation("WorkoutTemplateExerciseUpdatedBy")
+  deletedWorkoutTemplateExercises  WorkoutTemplateExercise[]    @relation("WorkoutTemplateExerciseDeletedBy")
+  createdWorkouts                  Workout[]                    @relation("WorkoutCreatedBy")
+  updatedWorkouts                  Workout[]                    @relation("WorkoutUpdatedBy")
+  deletedWorkouts                  Workout[]                    @relation("WorkoutDeletedBy")
+  createdWorkoutExercises          WorkoutExercise[]            @relation("WorkoutExerciseCreatedBy")
+  updatedWorkoutExercises          WorkoutExercise[]            @relation("WorkoutExerciseUpdatedBy")
+  deletedWorkoutExercises          WorkoutExercise[]            @relation("WorkoutExerciseDeletedBy")
+  createdWorkoutSets               WorkoutSet[]                 @relation("WorkoutSetCreatedBy")
+  updatedWorkoutSets               WorkoutSet[]                 @relation("WorkoutSetUpdatedBy")
+  deletedWorkoutSets               WorkoutSet[]                 @relation("WorkoutSetDeletedBy")
+  createdFoodItems                 FoodItem[]                   @relation("FoodItemCreatedBy")
+  updatedFoodItems                 FoodItem[]                   @relation("FoodItemUpdatedBy")
+  deletedFoodItems                 FoodItem[]                   @relation("FoodItemDeletedBy")
+  createdFoodItemTranslations      FoodItemTranslation[]        @relation("FoodItemTranslationCreatedBy")
+  updatedFoodItemTranslations      FoodItemTranslation[]        @relation("FoodItemTranslationUpdatedBy")
+  deletedFoodItemTranslations      FoodItemTranslation[]        @relation("FoodItemTranslationDeletedBy")
+  createdMeals                     Meal[]                       @relation("MealCreatedBy")
+  updatedMeals                     Meal[]                       @relation("MealUpdatedBy")
+  deletedMeals                     Meal[]                       @relation("MealDeletedBy")
+  createdMealItems                 MealItem[]                   @relation("MealItemCreatedBy")
+  updatedMealItems                 MealItem[]                   @relation("MealItemUpdatedBy")
+  deletedMealItems                 MealItem[]                   @relation("MealItemDeletedBy")
+  createdNutritionGoals            NutritionGoal[]              @relation("NutritionGoalCreatedBy")
+  updatedNutritionGoals            NutritionGoal[]              @relation("NutritionGoalUpdatedBy")
+  deletedNutritionGoals            NutritionGoal[]              @relation("NutritionGoalDeletedBy")
+  createdWaterIntakes              WaterIntake[]                @relation("WaterIntakeCreatedBy")
+  updatedWaterIntakes              WaterIntake[]                @relation("WaterIntakeUpdatedBy")
+  deletedWaterIntakes              WaterIntake[]                @relation("WaterIntakeDeletedBy")
+  createdBodyMeasurements          BodyMeasurement[]            @relation("BodyMeasurementCreatedBy")
+  updatedBodyMeasurements          BodyMeasurement[]            @relation("BodyMeasurementUpdatedBy")
+  deletedBodyMeasurements          BodyMeasurement[]            @relation("BodyMeasurementDeletedBy")
+
+  @@index([deletedAt])
+}
+
+model UserTranslation {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  languageId  String    @db.VarChar(10)
+  bio         String?
+  address     String?
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  user        User      @relation(fields: [userId], references: [id])
+  language    Language  @relation(fields: [languageId], references: [id])
+  createdBy   User?     @relation("UserTranslationCreatedBy", fields: [createdById], references: [id])
+  createdById Int?
+  updatedBy   User?     @relation("UserTranslationUpdatedBy", fields: [updatedById], references: [id])
+  updatedById Int?
+  deletedBy   User?     @relation("UserTranslationDeletedBy", fields: [deletedById], references: [id])
+  deletedById Int?
+
+  @@unique([userId, languageId])
+  @@index([deletedAt])
+}
+
+model UserProfile {
+  id                        Int       @id @default(autoincrement())
+  userId                    Int       @unique
+  height                    Float?
+  weight                    Float?
+  bodyFatPercentage         Float?
+  muscleMass                Float?
+  activityLevel             String?
+  fitnessGoal               String?
+  experienceLevel           String?
+  medicalConditions         String?
+  injuries                  String?
+  availableEquipment        String?
+  preferredWorkoutDuration  Int?
+  workoutDaysPerWeek        Int?
+  createdAt                 DateTime  @default(now())
+  updatedAt                 DateTime  @updatedAt
+  deletedAt                 DateTime?
+
+  user        User  @relation(fields: [userId], references: [id])
+  createdBy   User? @relation("UserProfileCreatedBy", fields: [createdById], references: [id])
+  createdById Int?
+  updatedBy   User? @relation("UserProfileUpdatedBy", fields: [updatedById], references: [id])
+  updatedById Int?
+  deletedBy   User? @relation("UserProfileDeletedBy", fields: [deletedById], references: [id])
+  deletedById Int?
+
+  @@index([deletedAt])
+}
+
+model VerificationCode {
+  id        Int                   @id @default(autoincrement())
+  email     String
+  code      String
+  type      VerificationCodeType
+  expiresAt DateTime
+  createdAt DateTime              @default(now())
+
+  @@index([email, code, type])
+}
+
+model RefreshToken {
+  token     String   @id @unique
+  userId    Int
+  deviceId  Int
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+  device    Device   @relation(fields: [deviceId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([expiresAt])
+}
+
+model Device {
+  id            Int            @id @default(autoincrement())
+  userId        Int
+  userAgent     String
+  ip            String
+  lastActive    DateTime       @updatedAt
+  createdAt     DateTime       @default(now())
+  isActive      Boolean        @default(true)
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  refreshTokens RefreshToken[]
+}
+
+model Permission {
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String
+  path        String
+  method      String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  createdBy   User? @relation("PermissionCreatedBy", fields: [createdById], references: [id])
+  createdById Int?
+  updatedBy   User? @relation("PermissionUpdatedBy", fields: [updatedById], references: [id])
+  updatedById Int?
+  deletedBy   User? @relation("PermissionDeletedBy", fields: [deletedById], references: [id])
+  deletedById Int?
+
+  roles PermissionsRoles[]
+
+  @@index([deletedAt])
+}
+
+model Role {
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  createdBy   User? @relation("RoleCreatedBy", fields: [createdById], references: [id])
+  createdById Int?
+  updatedBy   User? @relation("RoleUpdatedBy", fields: [updatedById], references: [id])
+  updatedById Int?
+  deletedBy   User? @relation("RoleDeletedBy", fields: [deletedById], references: [id])
+  deletedById Int?
+
+  users       User[]
+  permissions PermissionsRoles[]
+
+  @@index([deletedAt])
+}
+
+model PermissionsRoles {
+  permissionId Int
+  roleId       Int
+
+  permission Permission @relation(fields: [permissionId], references: [id])
+  role       Role       @relation(fields: [roleId], references: [id])
+
+  @@id([permissionId, roleId])
+}
+
+// ==================== TRAINER MANAGEMENT ====================
+
+model Trainer {
+  id              Int       @id @default(autoincrement())
+  userId          Int       @unique
+  specialties     String?
+  certifications  String?
+  experienceYears Int?
+  hourlyRate      Float?
+  isAvailable     Boolean   @default(true)
+  maxClients      Int       @default(10)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  deletedAt       DateTime?
+
+  user        User   @relation(fields: [userId], references: [id])
+  createdBy   User?  @relation("TrainerCreatedBy", fields: [createdById], references: [id])
+  createdById Int?
+  updatedBy   User?  @relation("TrainerUpdatedBy", fields: [updatedById], references: [id])
+  updatedById Int?
+  deletedBy   User?  @relation("TrainerDeletedBy", fields: [deletedById], references: [id])
+  deletedById Int?
+
+  translations TrainerTranslation[]
+  reviews      TrainerReview[]
+  clients      TrainerClient[]
+
+  @@index([deletedAt])
+}
+
+model TrainerTranslation {
+  id             Int       @id @default(autoincrement())
+  trainerId      Int
+  languageId     String    @db.VarChar(10)
+  bio            String?
+  specialties    String?
+  certifications String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
+
+  trainer     Trainer  @relation(fields: [trainerId], references: [id])
+  language    Language @relation(fields: [languageId], references: [id])
+  createdBy   User?    @relation("TrainerTranslationCreatedBy", fields: [createdById], references: [id])
+  createdById Int?
+  updatedBy   User?    @relation("TrainerTranslationUpdatedBy", fields: [updatedById], references: [id])
+  updatedById Int?
+  deletedBy   User?    @relation("TrainerTranslationDeletedBy", fields: [deletedById], references: [id])
+  deletedById Int?
+
+  @@unique([trainerId, languageId])
+  @@index([deletedAt])
+}
+
+model TrainerReview {
+  id        Int       @id @default(autoincrement())
+  trainerId Int
+  clientId  Int
+  rating    Int
+  content   String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  trainer     Trainer @relation(fields: [trainerId], references: [id])
+  client      User    @relation(fields: [clientId], references: [id])
+  createdBy   User?   @relation("TrainerReviewCreatedBy", fields: [createdById], references: [id])
+  createdById Int?
+  updatedBy   User?   @relation("TrainerReviewUpdatedBy", fields: [updatedById], references: [id])
+  updatedById Int?
+  deletedBy   User?   @relation("TrainerReviewDeletedBy", fields: [deletedById], references: [id])
+  deletedById Int?
+
+  @@unique([trainerId, clientId])
+  @@index([deletedAt])
+}
+
+model TrainerClient {
+  id            Int                 @id @default(autoincrement())
+  trainerId     Int
+  clientId      Int
+  status        TrainerClientStatus @default(PENDING)
+  startDate     DateTime?
+  endDate       DateTime?
+  sessionCount  Int                 @default(0)
+  totalSessions Int?
+  packageType   String?
+  packagePrice  Float?
+  paymentStatus PaymentStatus       @default(PENDING)
+  notes         String?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  deletedAt     DateTime?
+
+  trainer     Trainer @relation(fields: [trainerId], references: [id])
+  client      User    @relation("ClientRelationships", fields: [clientId], references: [id])
+  createdBy   User?   @relation("TrainerClientCreatedBy", fields: [createdById], references: [id])
+  createdById Int?
+  updatedBy   User?   @relation("TrainerClientUpdatedBy", fields: [updatedById], references: [id])
+  updatedById Int?
+  deletedBy   User?   @relation("TrainerClientDeletedBy", fields: [deletedById], references: [id])
+  deletedById Int?
+
+  @@index([trainerId, clientId, status])
+  @@index([deletedAt])
+}
+
+// ==================== EXERCISE LIBRARY ====================
+
+model ExerciseCategory {
+  id               Int       @id @default(autoincrement())
+  parentCategoryId Int?
+  icon             String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  deletedAt        DateTime?
+
+  parentCategory ExerciseCategory?  @relation("CategoryHierarchy", fields: [parentCategoryId], references: [id])
+  childCategories ExerciseCategory[] @relation("CategoryHierarchy")
+  createdBy       User?              @relation("ExerciseCategoryCreatedBy", fields: [createdById], references: [id])
+  createdById     Int?
+  updatedBy       User?              @relation("ExerciseCategoryUpdatedBy", fields: [updatedById], references: [id])
+  updatedById     Int?
+  deletedBy       User?              @relation("ExerciseCategoryDeletedBy", fields: [deletedById], references: [id])
+  deletedById     Int?
+
+  translations ExerciseCategoryTranslation[]
+  exercises    Exercise[]
+
+  @@index([deletedAt])
+}
+
+model ExerciseCategoryTranslation {
+  id          Int       @id @default(autoincrement())
+  categoryId  Int
+  languageId  String    @db.VarChar(10)
+  name        String
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  category    ExerciseCategory @relation(fields: [categoryId], references: [id])
+  language    Language         @relation(fields: [languageId], references: [id])
+  createdBy   User?            @relation("ExerciseCategoryTranslationCreatedBy", fields: [createdById], references: [id])
+  createdById Int?
+  updatedBy   User?            @relation("ExerciseCategoryTranslationUpdatedBy", fields: [updatedById], references: [id])
+  updatedById Int?
+  deletedBy   User?            @relation("ExerciseCategoryTranslationDeletedBy", fields: [deletedById], references: [id])
+  deletedById Int?
+
+  @@unique([categoryId, languageId])
+  @@index([deletedAt])
+}
+
+model MuscleGroup {
+  id        Int       @id @default(autoincrement())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  createdBy   User? @relation("MuscleGroupCreatedBy", fields: [createdById], references: [id])
+  createdById Int?
+  updatedBy   User? @relation("MuscleGroupUpdatedBy", fields: [updatedById], references: [id])
+  updatedById Int?
+  deletedBy   User? @relation("MuscleGroupDeletedBy", fields: [deletedById], references: [id])
+  deletedById Int?
+
+  translations      MuscleGroupTranslation[]
+  primaryExercises  Exercise[]
+
+  @@index([deletedAt])
+}
+
+model MuscleGroupTranslation {
+  id            Int       @id @default(autoincrement())
+  muscleGroupId Int
+  languageId    String    @db.VarChar(10)
+  name          String
+  description   String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+
+  muscleGroup MuscleGroup @relation(fields: [muscleGroupId], references: [id])
+  language    Language    @relation(fields: [languageId], references: [id])
+  createdBy   User?       @relation("MuscleGroupTranslationCreatedBy", fields: [createdById], references: [id])
+  createdById Int?
+  updatedBy   User?       @relation("MuscleGroupTranslationUpdatedBy", fields: [updatedById], references: [id])
+  updatedById Int?
+  deletedBy   User?       @relation("MuscleGroupTranslationDeletedBy", fields: [deletedById], references: [id])
+  deletedById Int?
+
+  @@unique([muscleGroupId, languageId])
+  @@index([deletedAt])
+}
+
+model Equipment {
+  id        Int       @id @default(autoincrement())
+  icon      String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  createdBy   User? @relation("EquipmentCreatedBy", fields: [createdById], references: [id])
+  createdById Int?
+  updatedBy   User? @relation("EquipmentUpdatedBy", fields: [updatedById], references: [id])
+  updatedById Int?
+  deletedBy   User? @relation("EquipmentDeletedBy", fields: [deletedById], references: [id])
+  deletedById Int?
+
+  translations EquipmentTranslation[]
+
+  @@index([deletedAt])
+}
+
+model EquipmentTranslation {
+  id          Int       @id @default(autoincrement())
+  equipmentId Int
+  languageId  String    @db.VarChar(10)
+  name        String
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  equipment   Equipment @relation(fields: [equipmentId], references: [id])
+  language    Language  @relation(fields: [languageId], references: [id])
+  createdBy   User?     @relation("EquipmentTranslationCreatedBy", fields: [createdById], references: [id])
+  createdById Int?
+  updatedBy   User?     @relation("EquipmentTranslationUpdatedBy", fields: [updatedById], references: [id])
+  updatedById Int?
+  deletedBy   User?     @relation("EquipmentTranslationDeletedBy", fields: [deletedById], references: [id])
+  deletedById Int?
+
+  @@unique([equipmentId, languageId])
+  @@index([deletedAt])
+}
+
+model Exercise {
+  id               Int       @id @default(autoincrement())
+  categoryId       Int?
+  primaryMuscleId  Int?
+  secondaryMuscles String?
+  equipmentIds     String?
+  difficultyLevel  String?
+  videoUrl         String?
+  imageUrl         String?
+  isCustom         Boolean   @default(false)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  deletedAt        DateTime?
+
+  category        ExerciseCategory? @relation(fields: [categoryId], references: [id])
+  primaryMuscle   MuscleGroup?      @relation(fields: [primaryMuscleId], references: [id])
+  createdBy       User?             @relation("ExerciseCreatedBy", fields: [createdById], references: [id])
+  createdById     Int?
+  updatedBy       User?             @relation("ExerciseUpdatedBy", fields: [updatedById], references: [id])
+  updatedById     Int?
+  deletedBy       User?             @relation("ExerciseDeletedBy", fields: [deletedById], references: [id])
+  deletedById     Int?
+
+  translations         ExerciseTranslation[]
+  templateExercises    WorkoutTemplateExercise[]
+  workoutExercises     WorkoutExercise[]
+
+  @@index([deletedAt])
+}
+
+model ExerciseTranslation {
+  id           Int       @id @default(autoincrement())
+  exerciseId   Int
+  languageId   String    @db.VarChar(10)
+  name         String
+  description  String?
+  instructions String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+
+  exercise    Exercise @relation(fields: [exerciseId], references: [id])
+  language    Language @relation(fields: [languageId], references: [id])
+  createdBy   User?    @relation("ExerciseTranslationCreatedBy", fields: [createdById], references: [id])
+  createdById Int?
+  updatedBy   User?    @relation("ExerciseTranslationUpdatedBy", fields: [updatedById], references: [id])
+  updatedById Int?
+  deletedBy   User?    @relation("ExerciseTranslationDeletedBy", fields: [deletedById], references: [id])
+  deletedById Int?
+
+  @@unique([exerciseId, languageId])
+  @@index([deletedAt])
+}
+
+// ==================== WORKOUT MANAGEMENT ====================
+
+model WorkoutTemplate {
+  id                Int       @id @default(autoincrement())
+  name              String
+  description       String?
+  durationMinutes   Int?
+  difficultyLevel   String?
+  targetGoal        String?
+  categoryIds       String?
+  equipmentRequired String?
+  isPublic          Boolean   @default(false)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  deletedAt         DateTime?
+
+  createdBy   User? @relation("WorkoutTemplateCreatedBy", fields: [createdById], references: [id])
+  createdById Int?
+  updatedBy   User? @relation("WorkoutTemplateUpdatedBy", fields: [updatedById], references: [id])
+  updatedById Int?
+  deletedBy   User? @relation("WorkoutTemplateDeletedBy", fields: [deletedById], references: [id])
+  deletedById Int?
+
+  translations WorkoutTemplateTranslation[]
+  exercises    WorkoutTemplateExercise[]
+  workouts     Workout[]
+
+  @@index([deletedAt])
+}
+
+model WorkoutTemplateTranslation {
+  id          Int       @id @default(autoincrement())
+  templateId  Int
+  languageId  String    @db.VarChar(10)
+  name        String
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  template    WorkoutTemplate @relation(fields: [templateId], references: [id])
+  language    Language        @relation(fields: [languageId], references: [id])
+  createdBy   User?           @relation("WorkoutTemplateTranslationCreatedBy", fields: [createdById], references: [id])
+  createdById Int?
+  updatedBy   User?           @relation("WorkoutTemplateTranslationUpdatedBy", fields: [updatedById], references: [id])
+  updatedById Int?
+  deletedBy   User?           @relation("WorkoutTemplateTranslationDeletedBy", fields: [deletedById], references: [id])
+  deletedById Int?
+
+  @@unique([templateId, languageId])
+  @@index([deletedAt])
+}
+
+model WorkoutTemplateExercise {
+  id              Int       @id @default(autoincrement())
+  templateId      Int
+  exerciseId      Int
+  orderIndex      Int
+  sets            Int?
+  repsMin         Int?
+  repsMax         Int?
+  weightKg        Float?
+  durationSeconds Int?
+  restSeconds     Int?
+  notes           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  deletedAt       DateTime?
+
+  template    WorkoutTemplate @relation(fields: [templateId], references: [id])
+  exercise    Exercise        @relation(fields: [exerciseId], references: [id])
+  createdBy   User?           @relation("WorkoutTemplateExerciseCreatedBy", fields: [createdById], references: [id])
+  createdById Int?
+  updatedBy   User?           @relation("WorkoutTemplateExerciseUpdatedBy", fields: [updatedById], references: [id])
+  updatedById Int?
+  deletedBy   User?           @relation("WorkoutTemplateExerciseDeletedBy", fields: [deletedById], references: [id])
+  deletedById Int?
+
+  @@index([templateId, orderIndex])
+  @@index([deletedAt])
+}
+
+model Workout {
+  id              Int           @id @default(autoincrement())
+  userId          Int
+  templateId      Int?
+  name            String
+  scheduledDate   DateTime?
+  completedDate   DateTime?
+  durationMinutes Int?
+  status          WorkoutStatus @default(SCHEDULED)
+  notes           String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  deletedAt       DateTime?
+
+  user        User             @relation(fields: [userId], references: [id])
+  template    WorkoutTemplate? @relation(fields: [templateId], references: [id])
+  createdBy   User?            @relation("WorkoutCreatedBy", fields: [createdById], references: [id])
+  createdById Int?
+  updatedBy   User?            @relation("WorkoutUpdatedBy", fields: [updatedById], references: [id])
+  updatedById Int?
+  deletedBy   User?            @relation("WorkoutDeletedBy", fields: [deletedById], references: [id])
+  deletedById Int?
+
+  exercises WorkoutExercise[]
+
+  @@index([userId, scheduledDate])
+  @@index([userId, status])
+  @@index([deletedAt])
+}
+
+model WorkoutExercise {
+  id                     Int       @id @default(autoincrement())
+  workoutId              Int
+  exerciseId             Int
+  orderIndex             Int
+  plannedSets            Int?
+  plannedRepsMin         Int?
+  plannedRepsMax         Int?
+  plannedWeightKg        Float?
+  plannedDurationSeconds Int?
+  plannedRestSeconds     Int?
+  notes                  String?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+  deletedAt              DateTime?
+
+  workout     Workout  @relation(fields: [workoutId], references: [id])
+  exercise    Exercise @relation(fields: [exerciseId], references: [id])
+  createdBy   User?    @relation("WorkoutExerciseCreatedBy", fields: [createdById], references: [id])
+  createdById Int?
+  updatedBy   User?    @relation("WorkoutExerciseUpdatedBy", fields: [updatedById], references: [id])
+  updatedById Int?
+  deletedBy   User?    @relation("WorkoutExerciseDeletedBy", fields: [deletedById], references: [id])
+  deletedById Int?
+
+  sets WorkoutSet[]
+
+  @@index([workoutId, orderIndex])
+  @@index([deletedAt])
+}
+
+model WorkoutSet {
+  id                Int       @id @default(autoincrement())
+  workoutExerciseId Int
+  setNumber         Int
+  repsCompleted     Int?
+  weightKg          Float?
+  durationSeconds   Int?
+  restSeconds       Int?
+  rpe               Int?
+  notes             String?
+  completedAt       DateTime  @default(now())
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  deletedAt         DateTime?
+
+  workoutExercise WorkoutExercise @relation(fields: [workoutExerciseId], references: [id])
+  createdBy       User?           @relation("WorkoutSetCreatedBy", fields: [createdById], references: [id])
+  createdById     Int?
+  updatedBy       User?           @relation("WorkoutSetUpdatedBy", fields: [updatedById], references: [id])
+  updatedById     Int?
+  deletedBy       User?           @relation("WorkoutSetDeletedBy", fields: [deletedById], references: [id])
+  deletedById     Int?
+
+  @@index([workoutExerciseId, setNumber])
+  @@index([deletedAt])
+}
+
+// ==================== NUTRITION MANAGEMENT ====================
+
+model FoodItem {
+  id               Int       @id @default(autoincrement())
+  brand            String?
+  servingSize      String
+  servingSizeGrams Float?
+  caloriesPer100g  Float
+  proteinPer100g   Float?
+  carbsPer100g     Float?
+  fatPer100g       Float?
+  fiberPer100g     Float?
+  sugarPer100g     Float?
+  sodiumPer100g    Float?
+  category         String?
+  barcode          String?   @unique
+  isCustom         Boolean   @default(false)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  deletedAt        DateTime?
+
+  createdBy   User? @relation("FoodItemCreatedBy", fields: [createdById], references: [id])
+  createdById Int?
+  updatedBy   User? @relation("FoodItemUpdatedBy", fields: [updatedById], references: [id])
+  updatedById Int?
+  deletedBy   User? @relation("FoodItemDeletedBy", fields: [deletedById], references: [id])
+  deletedById Int?
+
+  translations FoodItemTranslation[]
+  mealItems    MealItem[]
+
+  @@index([deletedAt])
+}
+
+model FoodItemTranslation {
+  id          Int       @id @default(autoincrement())
+  foodItemId  Int
+  languageId  String    @db.VarChar(10)
+  name        String
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  foodItem    FoodItem @relation(fields: [foodItemId], references: [id])
+  language    Language @relation(fields: [languageId], references: [id])
+  createdBy   User?    @relation("FoodItemTranslationCreatedBy", fields: [createdById], references: [id])
+  createdById Int?
+  updatedBy   User?    @relation("FoodItemTranslationUpdatedBy", fields: [updatedById], references: [id])
+  updatedById Int?
+  deletedBy   User?    @relation("FoodItemTranslationDeletedBy", fields: [deletedById], references: [id])
+  deletedById Int?
+
+  @@unique([foodItemId, languageId])
+  @@index([deletedAt])
+}
+
+model Meal {
+  id        Int       @id @default(autoincrement())
+  userId    Int
+  name      String
+  mealType  String
+  date      DateTime
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  user        User  @relation(fields: [userId], references: [id])
+  createdBy   User? @relation("MealCreatedBy", fields: [createdById], references: [id])
+  createdById Int?
+  updatedBy   User? @relation("MealUpdatedBy", fields: [updatedById], references: [id])
+  updatedById Int?
+  deletedBy   User? @relation("MealDeletedBy", fields: [deletedById], references: [id])
+  deletedById Int?
+
+  items MealItem[]
+
+  @@index([userId, date, mealType])
+  @@index([deletedAt])
+}
+
+model MealItem {
+  id         Int       @id @default(autoincrement())
+  mealId     Int
+  foodItemId Int
+  quantity   Float
+  unit       String
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+
+  meal        Meal     @relation(fields: [mealId], references: [id])
+  foodItem    FoodItem @relation(fields: [foodItemId], references: [id])
+  createdBy   User?    @relation("MealItemCreatedBy", fields: [createdById], references: [id])
+  createdById Int?
+  updatedBy   User?    @relation("MealItemUpdatedBy", fields: [updatedById], references: [id])
+  updatedById Int?
+  deletedBy   User?    @relation("MealItemDeletedBy", fields: [deletedById], references: [id])
+  deletedById Int?
+
+  @@index([deletedAt])
+}
+
+model NutritionGoal {
+  id               Int       @id @default(autoincrement())
+  userId           Int
+  dailyCalories    Int?
+  dailyProtein     Float?
+  dailyCarbs       Float?
+  dailyFat         Float?
+  dailyFiber       Float?
+  dailySodium      Float?
+  waterIntakeLiters Float?
+  startDate        DateTime
+  endDate          DateTime?
+  isActive         Boolean   @default(true)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  deletedAt        DateTime?
+
+  user        User  @relation(fields: [userId], references: [id])
+  createdBy   User? @relation("NutritionGoalCreatedBy", fields: [createdById], references: [id])
+  createdById Int?
+  updatedBy   User? @relation("NutritionGoalUpdatedBy", fields: [updatedById], references: [id])
+  updatedById Int?
+  deletedBy   User? @relation("NutritionGoalDeletedBy", fields: [deletedById], references: [id])
+  deletedById Int?
+
+  @@index([userId, isActive])
+  @@index([deletedAt])
+}
+
+model WaterIntake {
+  id           Int       @id @default(autoincrement())
+  userId       Int
+  date         DateTime
+  amountLiters Float
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+
+  user        User  @relation(fields: [userId], references: [id])
+  createdBy   User? @relation("WaterIntakeCreatedBy", fields: [createdById], references: [id])
+  createdById Int?
+  updatedBy   User? @relation("WaterIntakeUpdatedBy", fields: [updatedById], references: [id])
+  updatedById Int?
+  deletedBy   User? @relation("WaterIntakeDeletedBy", fields: [deletedById], references: [id])
+  deletedById Int?
+
+  @@index([userId, date])
+  @@index([deletedAt])
+}
+
+// ==================== PROGRESS TRACKING ====================
+
+model BodyMeasurement {
+  id                 Int       @id @default(autoincrement())
+  userId             Int
+  measurementDate    DateTime
+  weightKg           Float?
+  bodyFatPercentage  Float?
+  muscleMassKg       Float?
+  chestCm            Float?
+  waistCm            Float?
+  hipsCm             Float?
+  bicepCm            Float?
+  thighCm            Float?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  deletedAt          DateTime?
+
+  user        User  @relation(fields: [userId], references: [id])
+  createdBy   User? @relation("BodyMeasurementCreatedBy", fields: [createdById], references: [id])
+  createdById Int?
+  updatedBy   User? @relation("BodyMeasurementUpdatedBy", fields: [updatedById], references: [id])
+  updatedById Int?
+  deletedBy   User? @relation("BodyMeasurementDeletedBy", fields: [deletedById], references: [id])
+  deletedById Int?
+
+  @@index([userId, measurementDate])
+  @@index([deletedAt])
+}
