@@ -8,12 +8,14 @@ import { HttpExceptionFilter } from './shared/filters/http-exception.filter';
 import { AuthModule } from './routes/auth/auth.module';
 import { SharedModule } from './shared/shared.module';
 import { LanguageModule } from './routes/language/language.module';
+import { PermissionModule } from './routes/permission/permission.module';
 
 @Module({
   imports: [
     AuthModule,
     SharedModule,
-    LanguageModule
+    LanguageModule,
+    PermissionModule
   ],
   controllers: [AppController],
   providers: [AppService , 
