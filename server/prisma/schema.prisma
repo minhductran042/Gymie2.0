@@ -3,7 +3,6 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
 }
 
 datasource db {
@@ -16,13 +15,14 @@ datasource db {
 enum UserStatus {
   ACTIVE
   INACTIVE
-  SUSPENDED
+  BLOCKED
 }
 
 enum VerificationCodeType {
-  EMAIL_VERIFICATION
-  PASSWORD_RESET
-  TWO_FACTOR
+  REGISTER
+  FORGOT_PASSWORD
+  LOGIN
+  DISABLE_2FA
 }
 
 enum TrainerClientStatus {
@@ -84,7 +84,7 @@ model User {
   avatar        String?
   dateOfBirth   DateTime?
   gender        String?
-  totpSecret    String?
+  totpSecret    String?    @db.VarChar(1000)
   status        UserStatus @default(ACTIVE)
   roleId        Int
   createdAt     DateTime   @default(now())
@@ -274,7 +274,7 @@ model VerificationCode {
   expiresAt DateTime
   createdAt DateTime              @default(now())
 
-  @@index([email, code, type])
+  @@unique([email, type], name: "email_type")
 }
 
 model RefreshToken {
@@ -305,21 +305,22 @@ model Device {
 model Permission {
   id          Int       @id @default(autoincrement())
   name        String
-  description String
+  description String    @default("")
   path        String
-  method      String
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  method      HTTPMethod
+  module      String     @default("") @db.VarChar(500)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
   deletedAt   DateTime?
 
-  createdBy   User? @relation("PermissionCreatedBy", fields: [createdById], references: [id])
+  createdBy   User?      @relation("PermissionCreatedBy", fields: [createdById], references: [id])
   createdById Int?
-  updatedBy   User? @relation("PermissionUpdatedBy", fields: [updatedById], references: [id])
+  updatedBy   User?      @relation("PermissionUpdatedBy", fields: [updatedById], references: [id])
   updatedById Int?
-  deletedBy   User? @relation("PermissionDeletedBy", fields: [deletedById], references: [id])
+  deletedBy   User?      @relation("PermissionDeletedBy", fields: [deletedById], references: [id])
   deletedById Int?
 
-  roles PermissionsRoles[]
+  roles Role[]
 
   @@index([deletedAt])
 }
@@ -333,28 +334,19 @@ model Role {
   updatedAt   DateTime  @updatedAt
   deletedAt   DateTime?
 
-  createdBy   User? @relation("RoleCreatedBy", fields: [createdById], references: [id])
+  createdBy   User?     @relation("RoleCreatedBy", fields: [createdById], references: [id])
   createdById Int?
-  updatedBy   User? @relation("RoleUpdatedBy", fields: [updatedById], references: [id])
+  updatedBy   User?     @relation("RoleUpdatedBy", fields: [updatedById], references: [id])
   updatedById Int?
-  deletedBy   User? @relation("RoleDeletedBy", fields: [deletedById], references: [id])
+  deletedBy   User?     @relation("RoleDeletedBy", fields: [deletedById], references: [id])
   deletedById Int?
 
   users       User[]
-  permissions PermissionsRoles[]
+  permissions Permission[]
 
   @@index([deletedAt])
 }
 
-model PermissionsRoles {
-  permissionId Int
-  roleId       Int
-
-  permission Permission @relation(fields: [permissionId], references: [id])
-  role       Role       @relation(fields: [roleId], references: [id])
-
-  @@id([permissionId, roleId])
-}
 
 // ==================== TRAINER MANAGEMENT ====================
 
@@ -483,6 +475,7 @@ model ExerciseCategory {
   deletedById     Int?
 
   translations ExerciseCategoryTranslation[]
+  workoutTemplates WorkoutTemplate[]
   exercises    Exercise[]
 
   @@index([deletedAt])
@@ -525,7 +518,8 @@ model MuscleGroup {
   deletedById Int?
 
   translations      MuscleGroupTranslation[]
-  primaryExercises  Exercise[]
+  primaryExercises  Exercise[]               @relation("ExercisePrimaryMuscle")
+  secondaryExercises Exercise[]              @relation("ExerciseSecondaryMuscles")
 
   @@index([deletedAt])
 }
@@ -568,6 +562,8 @@ model Equipment {
   deletedById Int?
 
   translations EquipmentTranslation[]
+  exercises    Exercise[]
+  workoutTemplates WorkoutTemplate[]
 
   @@index([deletedAt])
 }
@@ -599,8 +595,6 @@ model Exercise {
   id               Int       @id @default(autoincrement())
   categoryId       Int?
   primaryMuscleId  Int?
-  secondaryMuscles String?
-  equipmentIds     String?
   difficultyLevel  String?
   videoUrl         String?
   imageUrl         String?
@@ -609,14 +603,16 @@ model Exercise {
   updatedAt        DateTime  @updatedAt
   deletedAt        DateTime?
 
-  category        ExerciseCategory? @relation(fields: [categoryId], references: [id])
-  primaryMuscle   MuscleGroup?      @relation(fields: [primaryMuscleId], references: [id])
-  createdBy       User?             @relation("ExerciseCreatedBy", fields: [createdById], references: [id])
-  createdById     Int?
-  updatedBy       User?             @relation("ExerciseUpdatedBy", fields: [updatedById], references: [id])
-  updatedById     Int?
-  deletedBy       User?             @relation("ExerciseDeletedBy", fields: [deletedById], references: [id])
-  deletedById     Int?
+  category         ExerciseCategory? @relation(fields: [categoryId], references: [id])
+  primaryMuscle    MuscleGroup?      @relation("ExercisePrimaryMuscle", fields: [primaryMuscleId], references: [id])
+  secondaryMuscles MuscleGroup[]     @relation("ExerciseSecondaryMuscles")
+  equipments       Equipment[]
+  createdBy        User?             @relation("ExerciseCreatedBy", fields: [createdById], references: [id])
+  createdById      Int?
+  updatedBy        User?             @relation("ExerciseUpdatedBy", fields: [updatedById], references: [id])
+  updatedById      Int?
+  deletedBy        User?             @relation("ExerciseDeletedBy", fields: [deletedById], references: [id])
+  deletedById      Int?
 
   translations         ExerciseTranslation[]
   templateExercises    WorkoutTemplateExercise[]
@@ -658,19 +654,19 @@ model WorkoutTemplate {
   durationMinutes   Int?
   difficultyLevel   String?
   targetGoal        String?
-  categoryIds       String?
-  equipmentRequired String?
   isPublic          Boolean   @default(false)
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
   deletedAt         DateTime?
 
-  createdBy   User? @relation("WorkoutTemplateCreatedBy", fields: [createdById], references: [id])
-  createdById Int?
-  updatedBy   User? @relation("WorkoutTemplateUpdatedBy", fields: [updatedById], references: [id])
-  updatedById Int?
-  deletedBy   User? @relation("WorkoutTemplateDeletedBy", fields: [deletedById], references: [id])
-  deletedById Int?
+  categories        ExerciseCategory[]
+  equipments        Equipment[]
+  createdBy         User? @relation("WorkoutTemplateCreatedBy", fields: [createdById], references: [id])
+  createdById       Int?
+  updatedBy         User? @relation("WorkoutTemplateUpdatedBy", fields: [updatedById], references: [id])
+  updatedById       Int?
+  deletedBy         User? @relation("WorkoutTemplateDeletedBy", fields: [deletedById], references: [id])
+  deletedById       Int?
 
   translations WorkoutTemplateTranslation[]
   exercises    WorkoutTemplateExercise[]
@@ -1000,4 +996,14 @@ model BodyMeasurement {
 
   @@index([userId, measurementDate])
   @@index([deletedAt])
+}
+
+enum HTTPMethod {
+  GET
+  POST
+  PUT
+  DELETE
+  PATCH
+  OPTIONS
+  HEAD
 }

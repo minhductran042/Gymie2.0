@@ -45,6 +45,10 @@ if(!configServer.success) {
     process.exit(1);
 }
 
+
+
 const envConfig = configServer.data
+
+
 
 export default envConfig
