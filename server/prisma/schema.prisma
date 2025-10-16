@@ -451,6 +451,8 @@ model TrainerClient {
   deletedBy   User?   @relation("TrainerClientDeletedBy", fields: [deletedById], references: [id])
   deletedById Int?
 
+  @@unique([trainerId, clientId])
+
   @@index([trainerId, clientId, status])
   @@index([deletedAt])
 }
@@ -498,6 +500,8 @@ model ExerciseCategoryTranslation {
   updatedBy   User?            @relation("ExerciseCategoryTranslationUpdatedBy", fields: [updatedById], references: [id])
   updatedById Int?
   deletedBy   User?            @relation("ExerciseCategoryTranslationDeletedBy", fields: [deletedById], references: [id])
+
+  
   deletedById Int?
 
   @@unique([categoryId, languageId])
