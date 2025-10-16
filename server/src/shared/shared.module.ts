@@ -11,6 +11,7 @@ import { AuthenticationGuard } from "./guards/authentication.guard";
 import { JwtModule } from "@nestjs/jwt";
 import { ShareUserRepository } from "./repository/share-user.repo";
 import { ShareRoleRepository } from "./repository/share-role.repo";
+import { S3Service } from "./services/s3.service";
 
 
 const sharedServices = [
@@ -21,6 +22,7 @@ const sharedServices = [
     EmailService, 
     TwoFactorAuthService,
     ShareRoleRepository,
+    S3Service
 ];
 
 @Global()
