@@ -1,5 +1,5 @@
 
-import { UserSchema } from 'src/shared/models/share-user.model'
+import { UserSchema } from 'src/shared/models/shared-user.model'
 import {z} from 'zod'
 
 export const UpdateMeBodySchema = UserSchema.pick({

@@ -10,6 +10,10 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+generator json {
+  provider = "prisma-json-types-generator"
+}
+
 // ==================== ENUMS ====================
 
 enum UserStatus {
@@ -39,12 +43,35 @@ enum PaymentStatus {
   REFUNDED
 }
 
+enum MediaType {
+  IMAGE
+  VIDEO
+}
+
 enum WorkoutStatus {
   SCHEDULED
   IN_PROGRESS
   COMPLETED
   SKIPPED
   CANCELLED
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum HTTPMethod {
+  GET
+  POST
+  PUT
+  DELETE
+  PATCH
+  OPTIONS
+  HEAD
 }
 
 // ==================== CORE ENTITIES ====================
@@ -109,6 +136,7 @@ model User {
   trainer              Trainer?
   trainerReviews       TrainerReview[]
   clientRelationships  TrainerClient[]        @relation("ClientRelationships")
+  trainerBookings      TrainerBooking[]       @relation("TrainerBookings")
   refreshTokens        RefreshToken[]
   workouts             Workout[]
   meals                Meal[]
@@ -251,6 +279,13 @@ model UserProfile {
   availableEquipment        String?
   preferredWorkoutDuration  Int?
   workoutDaysPerWeek        Int?
+  
+  // Location preferences for recommendations
+  preferredDistricts        Json?     // JSON array: ["Quận 1", "Quận 3"]
+  city                      String?   // "TP.HCM", "Hà Nội"
+  homeLatitude              Float?
+  homeLongitude             Float?
+  
   createdAt                 DateTime  @default(now())
   updatedAt                 DateTime  @updatedAt
   deletedAt                 DateTime?
@@ -348,17 +383,25 @@ model Role {
 }
 
 
-// ==================== TRAINER MANAGEMENT ====================
 
 model Trainer {
   id              Int       @id @default(autoincrement())
   userId          Int       @unique
-  specialties     String?
+  /// [Specialties]
+  specialties     Json?     // JSON array of specialties: ["boxing","weight_loss"]
   certifications  String?
   experienceYears Int?
   hourlyRate      Float?
   isAvailable     Boolean   @default(true)
   maxClients      Int       @default(10)
+  
+  // Location information for "near you" recommendations
+  district        String?   // "Quận 1", "Quận 3", "Hoàn Kiếm"
+  city            String?   // "TP.HCM", "Hà Nội"
+  address         String?
+  latitude        Float?
+  longitude       Float?
+  
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   deletedAt       DateTime?
@@ -374,8 +417,12 @@ model Trainer {
   translations TrainerTranslation[]
   reviews      TrainerReview[]
   clients      TrainerClient[]
+  schedules    TrainerSchedule[]
+  bookings     TrainerBooking[]
 
   @@index([deletedAt])
+  @@index([district, city])
+  @@index([isAvailable, deletedAt])
 }
 
 model TrainerTranslation {
@@ -383,7 +430,8 @@ model TrainerTranslation {
   trainerId      Int
   languageId     String    @db.VarChar(10)
   bio            String?
-  specialties    String?
+  /// [Specialties]
+  specialties    Json?     // JSON array of specialties: ["boxing","weight_loss"]
   certifications String?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
@@ -408,6 +456,10 @@ model TrainerReview {
   clientId  Int
   rating    Int
   content   String?
+  helpfulCount Int     @default(0)      // Useful votes
+
+  media     ReviewMedia[]  
+
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
@@ -425,6 +477,18 @@ model TrainerReview {
   @@index([deletedAt])
 }
 
+
+model ReviewMedia {
+  id       Int       @id @default(autoincrement())
+  url      String    @db.VarChar(1000)
+  type     MediaType
+  reviewId Int
+  review       TrainerReview      @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+}
+
+
 model TrainerClient {
   id            Int                 @id @default(autoincrement())
   trainerId     Int
@@ -436,6 +500,7 @@ model TrainerClient {
   totalSessions Int?
   packageType   String?
   packagePrice  Float?
+  packageExpiresAt DateTime?         // Package expiration date (e.g., 90 days from start)
   paymentStatus PaymentStatus       @default(PENDING)
   notes         String?
   createdAt     DateTime            @default(now())
@@ -450,10 +515,100 @@ model TrainerClient {
   updatedById Int?
   deletedBy   User?   @relation("TrainerClientDeletedBy", fields: [deletedById], references: [id])
   deletedById Int?
+  
+  // All bookings/sessions for this contract
+  bookings    TrainerBooking[]
 
   @@unique([trainerId, clientId])
 
   @@index([trainerId, clientId, status])
+  @@index([deletedAt])
+}
+
+// Trainer weekly schedule (working hours)
+model TrainerSchedule {
+  id         Int      @id @default(autoincrement())
+  trainerId  Int
+  dayOfWeek  Int      // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+  startTime  String   // "09:00" (24-hour format)
+  endTime    String   // "18:00" (24-hour format)
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  deletedAt  DateTime?
+
+  trainer Trainer @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+
+  @@index([trainerId, dayOfWeek])
+  @@index([deletedAt])
+}
+
+// Trainer bookings for real-time availability and calendar management
+model TrainerBooking {
+  id           Int           @id @default(autoincrement())
+  trainerId    Int
+  clientId     Int
+  
+  // Link to contract/relationship
+  trainerClientId Int?      // Which TrainerClient contract this session belongs to
+  
+  // Time
+  startTime    DateTime
+  endTime      DateTime
+  
+  // Status & Type
+  status       BookingStatus @default(PENDING)
+  sessionType  String?       // "Personal Training", "Group Class", "Consultation"
+  
+  // Session tracking for package progress
+  sessionNumber   Int?      // 1, 2, 3, ... (for tracking progress in package)
+  completedAt     DateTime? // Actual completion time (vs scheduled time)
+  
+  // Recurring session support
+  isRecurring     Boolean  @default(false)
+  recurrenceRule  String?  // "WEEKLY:MON,WED,FRI" or iCal RRULE format
+  parentBookingId Int?     // If this is an instance of recurring booking
+  
+  // Location information
+  location        String?  // "Gold's Gym Q1", "Online", "Client's Home"
+  locationAddress String?
+  meetingLink     String?  // For online sessions (Zoom/Google Meet)
+  
+  // Cancellation tracking
+  cancelledBy        String?   // "TRAINER" | "CLIENT" | "SYSTEM"
+  cancelledAt        DateTime?
+  cancellationReason String?
+  cancellationFee    Float?    // Fee if cancelled within notice period
+  
+  // Payment per session
+  isPaid        Boolean   @default(false)
+  paidAt        DateTime?
+  paymentMethod String?   // "CASH", "CARD", "BANK_TRANSFER"
+  
+  // Reminder system
+  reminderSent   Boolean   @default(false)
+  reminderSentAt DateTime?
+  
+  // Notes and pricing
+  notes        String?
+  price        Float?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  deletedAt    DateTime?
+
+  // Relations
+  trainer         Trainer         @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+  client          User            @relation("TrainerBookings", fields: [clientId], references: [id], onDelete: Cascade)
+  trainerClient   TrainerClient?  @relation(fields: [trainerClientId], references: [id])
+  parentBooking   TrainerBooking? @relation("RecurringBookings", fields: [parentBookingId], references: [id])
+  childBookings   TrainerBooking[] @relation("RecurringBookings")
+
+  @@index([trainerId, startTime])
+  @@index([clientId, startTime])
+  @@index([trainerClientId, sessionNumber])
+  @@index([status, startTime])
+  @@index([parentBookingId])
+  @@index([completedAt])
   @@index([deletedAt])
 }
 
@@ -1002,12 +1157,3 @@ model BodyMeasurement {
   @@index([deletedAt])
 }
 
-enum HTTPMethod {
-  GET
-  POST
-  PUT
-  DELETE
-  PATCH
-  OPTIONS
-  HEAD
-}

@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "src/shared/services/prisma.service";
 import { CreateUserBodyType, GetUserQueryType, GetUsersResType, UpdateUserBodyType } from "./user.model";
-import { UserType } from "src/shared/models/share-user.model";
+import { UserType } from "src/shared/models/shared-user.model";
 
 @Injectable()
 export class UserRepository {

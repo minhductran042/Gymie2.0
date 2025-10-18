@@ -1,7 +1,7 @@
 
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod'
-import { GetUserProfileResShema, UpdateProfileResSchema } from '../models/share-user.model';
+import { GetUserProfileResShema, UpdateProfileResSchema } from '../models/shared-user.model';
 
 
 // dùng cho /Get profile và users/:id

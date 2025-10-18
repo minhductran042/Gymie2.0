@@ -1,6 +1,6 @@
 import { TypeOfVerificationCode, UserStatus } from "src/shared/constants/auth.constant";
 import z from "zod";
-import { UserSchema } from "src/shared/models/share-user.model";
+import { UserSchema } from "src/shared/models/shared-user.model";
 
 
 //==================================================

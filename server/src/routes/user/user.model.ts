@@ -1,4 +1,4 @@
-import { UserSchema } from "src/shared/models/share-user.model";
+import { UserSchema } from "src/shared/models/shared-user.model";
 import { RoleShema } from "src/shared/models/shared-role.model";
 import z from "zod";
 
