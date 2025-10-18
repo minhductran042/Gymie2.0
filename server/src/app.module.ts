@@ -16,7 +16,7 @@ import { MediaModule } from './routes/media/media.module';
 import { TrainerModule } from './routes/trainer/trainer.module';
 import path from 'path';
 import { AcceptLanguageResolver, I18nModule, QueryResolver } from 'nestjs-i18n';
-import { TrainerTranslationModule } from './routes/role/trainer-translation/trainer-translation.module';
+import { TrainerTranslationModule } from './routes/trainer/trainer-translation/trainer-translation.module';
 
 @Module({
   imports: [

@@ -9,7 +9,7 @@ export const TrainerTranslationSchema = z.object({
     trainerId: z.number(),
     languageId: z.string(),  // String in schema (VarChar)
     bio: z.string().nullable(),
-    specialties: SpecialtiesSchema.nullable(),  // Json type - array of strings (PrismaJson.Specialties)
+    specialties: SpecialtiesSchema, 
     certifications: z.string().nullable(),
     createdAt: z.date(),
     updatedAt: z.date(),

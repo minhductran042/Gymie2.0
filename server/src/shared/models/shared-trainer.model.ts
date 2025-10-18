@@ -5,7 +5,7 @@ export const SpecialtiesSchema = z.array(z.string())
 export const TrainerSchema =  z.object({
     id: z.number(),
     userId: z.number(),
-    specialties: SpecialtiesSchema.nullable(),  // Json type - array of strings (PrismaJson.Specialties)
+    specialties: SpecialtiesSchema,  // Json type - array of strings (PrismaJson.Specialties)
     experienceYears: z.number().nullable(),
     certifications: z.string().nullable(),
     hourlyRate: z.number().nullable(),

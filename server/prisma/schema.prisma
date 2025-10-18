@@ -267,12 +267,12 @@ model UserTranslation {
 model UserProfile {
   id                        Int       @id @default(autoincrement())
   userId                    Int       @unique
-  height                    Float?
-  weight                    Float?
+  height                    Float
+  weight                    Float
   bodyFatPercentage         Float?
   muscleMass                Float?
-  activityLevel             String?
-  fitnessGoal               String?
+  activityLevel             String
+  fitnessGoal               String
   experienceLevel           String?
   medicalConditions         String?
   injuries                  String?
@@ -388,7 +388,7 @@ model Trainer {
   id              Int       @id @default(autoincrement())
   userId          Int       @unique
   /// [Specialties]
-  specialties     Json?     // JSON array of specialties: ["boxing","weight_loss"]
+  specialties     Json     // JSON array of specialties: ["boxing","weight_loss"]
   certifications  String?
   experienceYears Int?
   hourlyRate      Float?
@@ -431,7 +431,7 @@ model TrainerTranslation {
   languageId     String    @db.VarChar(10)
   bio            String?
   /// [Specialties]
-  specialties    Json?     // JSON array of specialties: ["boxing","weight_loss"]
+  specialties    Json     // JSON array of specialties: ["boxing","weight_loss"]
   certifications String?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
@@ -455,7 +455,7 @@ model TrainerReview {
   trainerId Int
   clientId  Int
   rating    Int
-  content   String?
+  content   String
   helpfulCount Int     @default(0)      // Useful votes
 
   media     ReviewMedia[]  
@@ -494,12 +494,12 @@ model TrainerClient {
   trainerId     Int
   clientId      Int
   status        TrainerClientStatus @default(PENDING)
-  startDate     DateTime?
+  startDate     DateTime
   endDate       DateTime?
   sessionCount  Int                 @default(0)
-  totalSessions Int?
-  packageType   String?
-  packagePrice  Float?
+  totalSessions Int
+  packageType   String
+  packagePrice  Float
   packageExpiresAt DateTime?         // Package expiration date (e.g., 90 days from start)
   paymentStatus PaymentStatus       @default(PENDING)
   notes         String?
@@ -558,7 +558,7 @@ model TrainerBooking {
   
   // Status & Type
   status       BookingStatus @default(PENDING)
-  sessionType  String?       // "Personal Training", "Group Class", "Consultation"
+  sessionType  String       // "Personal Training", "Group Class", "Consultation"
   
   // Session tracking for package progress
   sessionNumber   Int?      // 1, 2, 3, ... (for tracking progress in package)
@@ -591,7 +591,7 @@ model TrainerBooking {
   
   // Notes and pricing
   notes        String?
-  price        Float?
+  price        Float
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   deletedAt    DateTime?
@@ -752,9 +752,9 @@ model EquipmentTranslation {
 
 model Exercise {
   id               Int       @id @default(autoincrement())
-  categoryId       Int?
-  primaryMuscleId  Int?
-  difficultyLevel  String?
+  categoryId       Int
+  primaryMuscleId  Int
+  difficultyLevel  String
   videoUrl         String?
   imageUrl         String?
   isCustom         Boolean   @default(false)
@@ -980,11 +980,11 @@ model FoodItem {
   id               Int       @id @default(autoincrement())
   brand            String?
   servingSize      String
-  servingSizeGrams Float?
+  servingSizeGrams Float
   caloriesPer100g  Float
-  proteinPer100g   Float?
-  carbsPer100g     Float?
-  fatPer100g       Float?
+  proteinPer100g   Float
+  carbsPer100g     Float
+  fatPer100g       Float
   fiberPer100g     Float?
   sugarPer100g     Float?
   sodiumPer100g    Float?

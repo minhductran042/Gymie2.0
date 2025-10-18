@@ -30,7 +30,7 @@ export class TrainerTranslationRepository {
                 ...data,
                 createdById
             }
-        })
+        }) 
     } 
 
     update({
@@ -50,7 +50,7 @@ export class TrainerTranslationRepository {
                 ...data,
                 updatedById
             }
-        }) 
+        }) as any
     }
 
     delete({

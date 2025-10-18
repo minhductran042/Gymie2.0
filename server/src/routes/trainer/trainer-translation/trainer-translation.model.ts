@@ -1,7 +1,7 @@
 
 import { TrainerTranslationSchema } from 'src/shared/models/shared-trainer-translation.model'
 import z from 'zod'
-import {  GetTrainerParamsSchema } from '../../trainer/trainer.model'
+import {  GetTrainerParamsSchema } from '../trainer.model'
 
 export const TrainerTranslationParamsSchema = z.object({
     trainerTranslationId: z.coerce.number().int().positive()
