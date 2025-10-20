@@ -8,6 +8,8 @@ import id from "zod/v4/locales/id.js";
 
 const prismaService = new PrismaService()
 
+const TrainerModule = ['AUTH','TRAINER', 'MEDIA', 'TRAINER-TRANSLATION', 'PROFILE']
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   await app.listen(3001);
@@ -98,26 +100,44 @@ async function bootstrap() {
       }
     })
 
-    const adminRole = await prismaService.role.findFirstOrThrow({
+    const adminPermissionIds = updatedPermissionsInDB.map(permission => ({
+      id: permission.id // update can mang {id: number}
+    }))
+
+    const trainerPermissionIds = updatedPermissionsInDB.filter(permission => TrainerModule.includes(permission.module))
+    .map(permission => ({ id: permission.id }))
+
+
+    // console.log(updatedPermissionsInDB.filter(permission => TrainerModule.includes(permission.module)))
+    await Promise.all([
+      updateRole(adminPermissionIds, RoleName.ADMIN),
+      updateRole(trainerPermissionIds, RoleName.TRAINER)
+    ])
+   
+
+  process.exit(0) // dung lai : Ctr+C
+}
+
+const updateRole = async (permissionIds: {id: number}[], roleName: string) => {
+    //Cap nhat lai toan bo permission cho admin
+     const role = await prismaService.role.findFirstOrThrow({
       where: {
-        name: RoleName.ADMIN,
+        name: roleName,
         deletedAt: null
       }
     })
 
     await prismaService.role.update({
       where: {
-        id: adminRole.id
+        id: role.id
       }, 
       data: {
         permissions: {
-          set: updatedPermissionsInDB.map(permission => ({
-            id: permission.id // update can mang {id: number}
-          }))
+          set: permissionIds
         }
       }
     })
+  }
 
-  process.exit(0) // dung lai : Ctr+C
-}
+  
 bootstrap();

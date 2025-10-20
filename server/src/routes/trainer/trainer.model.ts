@@ -5,30 +5,23 @@ import z from "zod";
 // ==================== GET TRAINERS ====================
 
 export const GetTrainersResSchema = z.object({
-    data: z.array(TrainerSchema.extend({
-        trainerTranslation: z.array(TrainerTranslationSchema),
-        user: z.object({
-            id: z.number(),
-            email: z.string(),
-            name: z.string(),
-            avatar: z.string().nullable(),
-        }).optional(),
-        _count: z.object({
-            clients: z.number(),
-            reviews: z.number(),
-        }).optional(),
-        averageRating: z.number().optional(),
-    })),
+    data: z.array(
+        TrainerSchema.extend({
+            trainerTranslations: z.array(TrainerTranslationSchema),
+        })
+    ),
     totalItems: z.number(),
     page: z.number(),
     limit: z.number(),
     totalPages: z.number()
 })
 
+
+
 export const GetTrainerQuerySchema = z.object({
     page: z.coerce.number().int().positive().default(1),
     limit: z.coerce.number().int().positive().max(100).default(10),
-    isAvailable: z.coerce.boolean().optional(),
+    isAvailable: z.coerce.boolean(),
     minHourlyRate: z.coerce.number().min(0).optional(),
     maxHourlyRate: z.coerce.number().min(0).optional(),
     minExperienceYears: z.coerce.number().int().min(0).optional(),
@@ -50,11 +43,20 @@ export const CreateTrainerBodySchema = TrainerSchema.pick({
     hourlyRate: true,
     isAvailable: true,
     maxClients: true,
+}).extend({
+    userId: z.number().int().positive() // userId của user sẽ trở thành trainer
 })
 
 
 
-export const UpdateTrainerBodySchema = CreateTrainerBodySchema 
+export const UpdateTrainerBodySchema = TrainerSchema.pick({
+    specialties: true,
+    certifications: true,
+    experienceYears: true,
+    hourlyRate: true,
+    isAvailable: true,
+    maxClients: true,
+}) 
 
 export const UpdateTrainerParamsSchema = z.object({
     trainerId: z.coerce.number().int().positive()
@@ -102,12 +104,7 @@ export const TrainerDetailResSchema = TrainerSchema.extend({
         avatar: z.string().nullable(),
         phoneNumber: z.string(),
     }),
-    translations: z.array(TrainerTranslationSchema),
-    _count: z.object({
-        clients: z.number(),
-        reviews: z.number(),
-    }).optional(),
-    averageRating: z.number().optional(),
+    trainerTranslations: z.array(TrainerTranslationSchema)
 })
 
 export type TrainerDetailResType = z.infer<typeof TrainerDetailResSchema>

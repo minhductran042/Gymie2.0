@@ -9,13 +9,19 @@ export const TrainerSchema =  z.object({
     experienceYears: z.number().nullable(),
     certifications: z.string().nullable(),
     hourlyRate: z.number().nullable(),
+    maxClients: z.number(),
     isAvailable: z.boolean(),
+    district: z.string().nullable(),
+    city: z.string().nullable(),
+    address: z.string().nullable(),
+    latitude: z.number().nullable(),
+    longitude: z.number().nullable(),
     createdAt: z.date(),
     updatedAt: z.date(),
     deletedAt: z.date().nullable(),
-    createdById: z.string().nullable(),
-    updatedById: z.string().nullable(),
-    deletedById: z.string().nullable(),
+    createdById: z.number().nullable(),
+    updatedById: z.number().nullable(),
+    deletedById: z.number().nullable(),
 })
 
 export type TrainerType = z.infer<typeof TrainerSchema>

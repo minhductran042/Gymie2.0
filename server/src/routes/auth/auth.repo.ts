@@ -21,6 +21,7 @@ export class AuthRepository {
             })
     }
 
+
     createUserIncludeRole(user: Pick<UserType, 'email' | 'name'| 'phoneNumber' | 'roleId' | 'password' | 'avatar'>) : 
     Promise<UserType & {role: RoleType}> { // Promise là kiểu trả về với password và toptSecret bị loại bỏ
         return this.prismaService.user.create({

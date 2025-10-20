@@ -132,7 +132,7 @@ model User {
   deletedUsers User[] @relation("UserDeletedBy")
 
   profile              UserProfile?
-  translations         UserTranslation[]
+  userTranslations         UserTranslation[]
   trainer              Trainer?
   trainerReviews       TrainerReview[]
   clientRelationships  TrainerClient[]        @relation("ClientRelationships")
@@ -414,7 +414,7 @@ model Trainer {
   deletedBy   User?  @relation("TrainerDeletedBy", fields: [deletedById], references: [id])
   deletedById Int?
 
-  translations TrainerTranslation[]
+  trainerTranslations TrainerTranslation[]
   reviews      TrainerReview[]
   clients      TrainerClient[]
   schedules    TrainerSchedule[]
@@ -631,7 +631,7 @@ model ExerciseCategory {
   deletedBy       User?              @relation("ExerciseCategoryDeletedBy", fields: [deletedById], references: [id])
   deletedById     Int?
 
-  translations ExerciseCategoryTranslation[]
+  exerciseCategoryTranslations ExerciseCategoryTranslation[]
   workoutTemplates WorkoutTemplate[]
   exercises    Exercise[]
 
@@ -676,7 +676,7 @@ model MuscleGroup {
   deletedBy   User? @relation("MuscleGroupDeletedBy", fields: [deletedById], references: [id])
   deletedById Int?
 
-  translations      MuscleGroupTranslation[]
+  muscleGroupTranslations      MuscleGroupTranslation[]
   primaryExercises  Exercise[]               @relation("ExercisePrimaryMuscle")
   secondaryExercises Exercise[]              @relation("ExerciseSecondaryMuscles")
 
@@ -720,7 +720,7 @@ model Equipment {
   deletedBy   User? @relation("EquipmentDeletedBy", fields: [deletedById], references: [id])
   deletedById Int?
 
-  translations EquipmentTranslation[]
+  equipmentTranslations EquipmentTranslation[]
   exercises    Exercise[]
   workoutTemplates WorkoutTemplate[]
 
@@ -773,7 +773,7 @@ model Exercise {
   deletedBy        User?             @relation("ExerciseDeletedBy", fields: [deletedById], references: [id])
   deletedById      Int?
 
-  translations         ExerciseTranslation[]
+  excerciseTranslations         ExerciseTranslation[]
   templateExercises    WorkoutTemplateExercise[]
   workoutExercises     WorkoutExercise[]
 
@@ -827,7 +827,7 @@ model WorkoutTemplate {
   deletedBy         User? @relation("WorkoutTemplateDeletedBy", fields: [deletedById], references: [id])
   deletedById       Int?
 
-  translations WorkoutTemplateTranslation[]
+  workoutTemplateTranslations WorkoutTemplateTranslation[]
   exercises    WorkoutTemplateExercise[]
   workouts     Workout[]
 
@@ -1002,7 +1002,7 @@ model FoodItem {
   deletedBy   User? @relation("FoodItemDeletedBy", fields: [deletedById], references: [id])
   deletedById Int?
 
-  translations FoodItemTranslation[]
+  foodItemTranslations FoodItemTranslation[]
   mealItems    MealItem[]
 
   @@index([deletedAt])

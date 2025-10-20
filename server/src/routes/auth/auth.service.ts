@@ -62,7 +62,7 @@ export class AuthService {
 
 
 
-    async register(body: RegisterBodyType) {
+    async registerForClient(body: RegisterBodyType) {
         try {
             
             await this.validateVerificationCode({
@@ -96,6 +96,44 @@ export class AuthService {
             return user
         } catch (error) {
            if(isUniqueConstraintPrismaError(error)) {
+                throw EmailAlreadyExistesException
+            }
+            throw error
+        }
+    }
+
+    async registerForTrainer(body: RegisterBodyType) {
+        try {
+            await this.validateVerificationCode({
+                email: body.email,
+                code: body.code,
+                type: TypeOfVerificationCode.REGISTER
+            })
+
+            const trainerRoleId = await this.roleService.getTrainerRoleId();
+            const hashedPassword = await this.hashingService.hash(body.password);
+            const [trainer] = await Promise.all(
+            [
+                this.authRepository.createUser({
+                email: body.email,
+                name: body.name,
+                phoneNumber: body.phoneNumber,
+                password: hashedPassword,
+                roleId: trainerRoleId,
+            }),
+
+            this.authRepository.deleteVerificationCode(
+                {
+                    email_type : {
+                        email: body.email,
+                        type: TypeOfVerificationCode.REGISTER
+                    }
+                }
+            )
+            ])
+            return trainer
+        } catch (error) {
+            if(isUniqueConstraintPrismaError(error)) {
                 throw EmailAlreadyExistesException
             }
             throw error

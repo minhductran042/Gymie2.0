@@ -9,6 +9,7 @@ import { Prisma } from '@prisma/client';
 export class ShareRoleRepository {
     private clientRoleId: number | null = null;
     private adminRoleId: number | null = null;
+    private trainerRoleId: number | null = null;
 
     constructor(private readonly prismaService: PrismaService) {}
 
@@ -50,5 +51,14 @@ export class ShareRoleRepository {
         return role.id;
     }
 
+    async getTrainerRoleId() {
+        if(this.trainerRoleId) {
+            return this.trainerRoleId;
+        }
+        const role = await this.getRole(RoleName.TRAINER)
+
+        this.trainerRoleId = role.id;
+        return role.id;
+    }
     
 }

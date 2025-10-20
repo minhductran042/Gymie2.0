@@ -18,11 +18,18 @@ export class AuthController {
         private readonly googleService: GoogleService
     ) {}
 
-    @Post('register')
+    @Post('register/client')
     @IsPublic()
     @ZodSerializerDto(RegisterResponseDTO)
-    async register(@Body() body: RegisterBodyDTO ) {
-        return  await this.authService.register(body)
+    async registerForClient(@Body() body: RegisterBodyDTO ) {
+        return  await this.authService.registerForClient(body)
+    }
+
+    @Post('register/trainer')
+    @IsPublic()
+    @ZodSerializerDto(RegisterResponseDTO)
+    async registerForTrainer(@Body() body: RegisterBodyDTO ) {
+        return  await this.authService.registerForTrainer(body)
     }
 
 
