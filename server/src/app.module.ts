@@ -19,6 +19,8 @@ import { TrainerTranslationModule } from './routes/trainer/trainer-translation/t
 import path from 'path';
 
 import { AcceptLanguageResolver, I18nModule, QueryResolver } from 'nestjs-i18n';
+import { TrainerClientModule } from './routes/trainer-client/trainer-client.module';
+import { TrainerReviewModule } from './routes/trainer-review/trainer-review.module';
 
 @Module({
   imports: [
@@ -44,7 +46,8 @@ import { AcceptLanguageResolver, I18nModule, QueryResolver } from 'nestjs-i18n';
     MediaModule,
     TrainerModule,
     TrainerTranslationModule,
-    // TrainerClientModule,
+    TrainerClientModule,
+    TrainerReviewModule
   ],
   controllers: [AppController],
   providers: [AppService , 
