@@ -22,11 +22,11 @@ export class TrainerService {
         return data;
     }
 
-    async getDetail(props: { trainerId: number }) {
+    async getDetail(trainerId: number) {
         const languageId = I18nContext.current()?.lang as string;
         
         const data = await this.trainerRepo.getDetail(
-            props.trainerId,
+            trainerId,
             languageId
         );
         return data;

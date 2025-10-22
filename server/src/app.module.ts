@@ -14,9 +14,11 @@ import { ProfileModule } from './routes/profile/profile.module';
 import { UserModule } from './routes/user/user.module';
 import { MediaModule } from './routes/media/media.module';
 import { TrainerModule } from './routes/trainer/trainer.module';
-import path from 'path';
-import { AcceptLanguageResolver, I18nModule, QueryResolver } from 'nestjs-i18n';
 import { TrainerTranslationModule } from './routes/trainer/trainer-translation/trainer-translation.module';
+// import { TrainerClientModule } from './routes/trainer-client/trainer-client.module';
+import path from 'path';
+
+import { AcceptLanguageResolver, I18nModule, QueryResolver } from 'nestjs-i18n';
 
 @Module({
   imports: [
@@ -41,7 +43,8 @@ import { TrainerTranslationModule } from './routes/trainer/trainer-translation/t
     UserModule,
     MediaModule,
     TrainerModule,
-    TrainerTranslationModule
+    TrainerTranslationModule,
+    // TrainerClientModule,
   ],
   controllers: [AppController],
   providers: [AppService , 

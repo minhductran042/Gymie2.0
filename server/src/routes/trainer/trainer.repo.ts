@@ -121,6 +121,7 @@ export class TrainerRepository {
         return trainer
     }
 
+
     async create({
         data,
         createdById,

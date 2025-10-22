@@ -24,13 +24,14 @@ export class TrainerTranslationService {
             if(isUniqueConstraintPrismaError(error)) {
                 throw TrainerTranslationAlreadyExists
             }
+            throw error;
         }
     }
 
     async update({data, trainerTranslationId, updatedById} : {data: CreateTrainerTranslationType, trainerTranslationId: number, updatedById: number}) {
         try {
             const trainer = await this.trainerTranslationRepository.update({trainerTranslationId, data, updatedById});
-            
+            return trainer;
         } catch(error) {
             if(isUniqueConstraintPrismaError(error)) {
                 throw TrainerTranslationAlreadyExists
@@ -38,6 +39,7 @@ export class TrainerTranslationService {
             if(isNotFoundPrismaError(error)) {
                 throw NotFoundRecordException
             }
+            throw error;
         }
     }
 

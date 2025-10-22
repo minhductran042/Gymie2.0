@@ -8,7 +8,7 @@ import id from "zod/v4/locales/id.js";
 
 const prismaService = new PrismaService()
 
-const TrainerModule = ['AUTH','TRAINER', 'MEDIA', 'TRAINER-TRANSLATION', 'PROFILE']
+const TrainerModule = ['AUTH','TRAINER', 'MEDIA', 'TRAINER-TRANSLATION', 'PROFILE', 'TRAINER-CLIENT']
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

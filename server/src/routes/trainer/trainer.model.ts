@@ -20,8 +20,8 @@ export const GetTrainersResSchema = z.object({
 
 export const GetTrainerQuerySchema = z.object({
     page: z.coerce.number().int().positive().default(1),
-    limit: z.coerce.number().int().positive().max(100).default(10),
-    isAvailable: z.coerce.boolean(),
+    limit: z.coerce.number().int().positive().default(10),
+    isAvailable: z.coerce.boolean().optional(),
     minHourlyRate: z.coerce.number().min(0).optional(),
     maxHourlyRate: z.coerce.number().min(0).optional(),
     minExperienceYears: z.coerce.number().int().min(0).optional(),

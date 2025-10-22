@@ -38,9 +38,18 @@ enum TrainerClientStatus {
 
 enum PaymentStatus {
   PENDING
-  PAID
+  SUCCESS
   FAILED
-  REFUNDED
+}
+
+enum PaymentMethod {
+  CASH
+  BANK_TRANSFER
+  CREDIT_CARD
+  DEBIT_CARD
+  MOMO
+  VNPAY
+  ZALOPAY
 }
 
 enum MediaType {
@@ -518,11 +527,86 @@ model TrainerClient {
   
   // All bookings/sessions for this contract
   bookings    TrainerBooking[]
+  
+  // Payment history for this package
+  payments    Payment[]
 
   @@unique([trainerId, clientId])
 
   @@index([trainerId, clientId, status])
   @@index([deletedAt])
+}
+
+// Payment records for trainer-client packages
+model Payment {
+  id                Int           @id @default(autoincrement())
+  trainerClientId   Int
+  amount            Float         // Amount paid
+  paymentMethod     PaymentMethod
+  status            PaymentStatus @default(PENDING)
+  
+  // Payment gateway transaction details
+  transactionId     String?       @unique // From payment gateway (VNPay, MoMo, etc.)
+  gatewayResponse   Json?         // Full response from payment gateway
+  
+  // Timestamps
+  paidAt            DateTime?     // When payment was completed
+  failedAt          DateTime?     // When payment failed
+  refundedAt        DateTime?     // When payment was refunded
+  
+  // Refund information
+  refundAmount      Float?
+  refundReason      String?
+  
+  // Receipt
+  receiptUrl        String?       // URL to receipt/invoice
+  
+  // Notes
+  notes             String?
+  
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  deletedAt         DateTime?
+  
+  // Relations
+  trainerClient     TrainerClient @relation(fields: [trainerClientId], references: [id])
+  @@index([trainerClientId])
+  @@index([status])
+  @@index([transactionId])
+  @@index([deletedAt])
+}
+
+model PaymentTransaction {
+  id                 Int      @id @default(autoincrement())
+  
+  // Gateway information
+  gateway            String   @db.VarChar(100)  // "VNPay", "Momo", "ZaloPay", "Bank"
+  
+  // Transaction details
+  transactionDate    DateTime @default(now())
+  accountNumber      String?  @db.VarChar(100)  // Bank account number
+  subAccount         String?  @db.VarChar(250)  // Sub account if any
+  
+  // Amounts
+  amountIn           Int      @default(0)       // Money in (VND)
+  amountOut          Int      @default(0)       // Money out (VND)
+  accumulated        Int      @default(0)       // Accumulated balance
+  
+  // Transaction identifiers
+  code               String?  @db.VarChar(250)  // Transaction code from gateway
+  transactionContent String?  @db.Text          // Transaction description/content
+  referenceNumber    String?  @db.VarChar(255)  // Reference number
+  
+  // Raw data from gateway
+  body               String?  @db.Text          // Full webhook/API response
+  
+  // Metadata
+  createdAt          DateTime @default(now())
+  
+  @@index([gateway, transactionDate])
+  @@index([code])
+  @@index([referenceNumber])
+  @@index([accountNumber])
 }
 
 // Trainer weekly schedule (working hours)
@@ -548,8 +632,7 @@ model TrainerBooking {
   id           Int           @id @default(autoincrement())
   trainerId    Int
   clientId     Int
-  
-  // Link to contract/relationship
+
   trainerClientId Int?      // Which TrainerClient contract this session belongs to
   
   // Time

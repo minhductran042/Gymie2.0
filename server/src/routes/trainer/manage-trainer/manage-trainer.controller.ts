@@ -1,22 +1,23 @@
 import { Body, Controller, Delete, Param, Post, Put } from '@nestjs/common';
 import { ManageTrainerService } from './manage-trainer.service';
 import { ZodSerializerDto } from 'nestjs-zod';
-import { CreateTrainerBodyDTO, DeleteTrainerParamsDTO, GetTrainerResDTO, UpdateTrainerBodyDTO, UpdateTrainerParamsDTO } from '../trainer.dto';
+import { CreateTrainerBodyDTO, DeleteTrainerParamsDTO, TrainerDetailResDTO, UpdateTrainerBodyDTO, UpdateTrainerParamsDTO } from '../trainer.dto';
 import { ActiveUser } from 'src/shared/decorator/active-user.decorator';
 import { MessageResDTO } from 'src/shared/dtos/response.dto';
+import { TrainerDetailResSchema } from '../trainer.model';
 
 @Controller('manage-trainer')
 export class ManageTrainerController {
     constructor(private readonly manageTrainer: ManageTrainerService) {}
 
     @Post()
-    @ZodSerializerDto(GetTrainerResDTO)
+    @ZodSerializerDto(TrainerDetailResDTO)
     create(@Body() body: CreateTrainerBodyDTO, @ActiveUser('userId') createdById: number) {
         return this.manageTrainer.create({data: body, createdById});
     }
 
     @Put(':trainerId')
-    @ZodSerializerDto(GetTrainerResDTO)
+    @ZodSerializerDto(TrainerDetailResDTO)
     update(
         @Param() params: UpdateTrainerParamsDTO, 
         @Body() body: UpdateTrainerBodyDTO,
