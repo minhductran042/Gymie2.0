@@ -5,19 +5,13 @@
  */
 declare global {
   namespace PrismaJson {
-    /**
-     * Specialties - Array of specialty strings
-     * Used in: Trainer.specialties, TrainerTranslation.specialties
-     * Example: ["boxing", "weight_loss", "strength_training", "cardio"]
-     */
+
     type Specialties = string[]
     
-    /**
-     * PreferredDistricts - Array of district strings
-     * Used in: UserProfile.preferredDistricts
-     * Example: ["Quận 1", "Quận 3", "Quận 10"]
-     */
+ 
     type PreferredDistricts = string[]
+
+    type Tags = string[] // E.g., ["high_protein", "low_carb", "gluten_free"]
   }
 }
 

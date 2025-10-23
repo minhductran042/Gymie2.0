@@ -106,6 +106,7 @@ model Language {
   equipmentTranslations           EquipmentTranslation[]
   exerciseTranslations            ExerciseTranslation[]
   workoutTemplateTranslations     WorkoutTemplateTranslation[]
+  foodCategoryTranslations        FoodCategoryTranslation[]
   foodItemTranslations            FoodItemTranslation[]
 
   @@index([deletedAt])
@@ -245,6 +246,12 @@ model User {
   createdBodyMeasurements          BodyMeasurement[]            @relation("BodyMeasurementCreatedBy")
   updatedBodyMeasurements          BodyMeasurement[]            @relation("BodyMeasurementUpdatedBy")
   deletedBodyMeasurements          BodyMeasurement[]            @relation("BodyMeasurementDeletedBy")
+  createdFoodCategories            FoodCategory[]               @relation("FoodCategoryCreatedBy")
+  updatedFoodCategories            FoodCategory[]               @relation("FoodCategoryUpdatedBy")
+  deletedFoodCategories            FoodCategory[]               @relation("FoodCategoryDeletedBy")
+  createdFoodCategoryTranslations  FoodCategoryTranslation[]    @relation("FoodCategoryTranslationCreatedBy")
+  updatedFoodCategoryTranslations  FoodCategoryTranslation[]    @relation("FoodCategoryTranslationUpdatedBy")
+  deletedFoodCategoryTranslations  FoodCategoryTranslation[]    @relation("FoodCategoryTranslationDeletedBy")
 
   @@index([deletedAt])
 }
@@ -1059,8 +1066,53 @@ model WorkoutSet {
 
 // ==================== NUTRITION MANAGEMENT ====================
 
+model FoodCategory {
+  id          Int       @id @default(autoincrement())
+  code        String    @unique // "protein", "carbohydrates", "healthy_fats", "vegetables", "fruits"
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  createdBy   User?     @relation("FoodCategoryCreatedBy", fields: [createdById], references: [id])
+  createdById Int?
+  updatedBy   User?     @relation("FoodCategoryUpdatedBy", fields: [updatedById], references: [id])
+  updatedById Int?
+  deletedBy   User?     @relation("FoodCategoryDeletedBy", fields: [deletedById], references: [id])
+  deletedById Int?
+
+  translations FoodCategoryTranslation[]
+  foodItems    FoodItem[]
+
+  @@index([deletedAt])
+}
+
+model FoodCategoryTranslation {
+  id          Int       @id @default(autoincrement())
+  categoryId  Int
+  languageId  String    @db.VarChar(10)
+  name        String    // "Protein", "Đạm"
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  category    FoodCategory @relation(fields: [categoryId], references: [id])
+  language    Language     @relation(fields: [languageId], references: [id])
+  createdBy   User?        @relation("FoodCategoryTranslationCreatedBy", fields: [createdById], references: [id])
+  createdById Int?
+  updatedBy   User?        @relation("FoodCategoryTranslationUpdatedBy", fields: [updatedById], references: [id])
+  updatedById Int?
+  deletedBy   User?        @relation("FoodCategoryTranslationDeletedBy", fields: [deletedById], references: [id])
+  deletedById Int?
+
+  @@unique([categoryId, languageId])
+  @@index([deletedAt])
+}
+
 model FoodItem {
   id               Int       @id @default(autoincrement())
+  name             String    
+  categoryId       Int?      
   brand            String?
   servingSize      String
   servingSizeGrams Float
@@ -1071,23 +1123,26 @@ model FoodItem {
   fiberPer100g     Float?
   sugarPer100g     Float?
   sodiumPer100g    Float?
-  category         String?
+  /// [Tags]
+  tags             Json?     // ["high_protein", "low_carb", "lean", "gluten_free", "dairy_free"]
   barcode          String?   @unique
   isCustom         Boolean   @default(false)
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
   deletedAt        DateTime?
 
-  createdBy   User? @relation("FoodItemCreatedBy", fields: [createdById], references: [id])
+  category    FoodCategory? @relation(fields: [categoryId], references: [id])
+  createdBy   User?         @relation("FoodItemCreatedBy", fields: [createdById], references: [id])
   createdById Int?
-  updatedBy   User? @relation("FoodItemUpdatedBy", fields: [updatedById], references: [id])
+  updatedBy   User?         @relation("FoodItemUpdatedBy", fields: [updatedById], references: [id])
   updatedById Int?
-  deletedBy   User? @relation("FoodItemDeletedBy", fields: [deletedById], references: [id])
+  deletedBy   User?         @relation("FoodItemDeletedBy", fields: [deletedById], references: [id])
   deletedById Int?
 
   foodItemTranslations FoodItemTranslation[]
   mealItems    MealItem[]
 
+  @@index([categoryId])
   @@index([deletedAt])
 }
 

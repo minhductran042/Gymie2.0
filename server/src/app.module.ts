@@ -15,12 +15,14 @@ import { UserModule } from './routes/user/user.module';
 import { MediaModule } from './routes/media/media.module';
 import { TrainerModule } from './routes/trainer/trainer.module';
 import { TrainerTranslationModule } from './routes/trainer/trainer-translation/trainer-translation.module';
-// import { TrainerClientModule } from './routes/trainer-client/trainer-client.module';
 import path from 'path';
 
 import { AcceptLanguageResolver, I18nModule, QueryResolver } from 'nestjs-i18n';
 import { TrainerClientModule } from './routes/trainer-client/trainer-client.module';
 import { TrainerReviewModule } from './routes/trainer-review/trainer-review.module';
+import { FoodItemModule } from './routes/food-item/food-item.module';
+import { FoodItemTranslationModule } from './routes/food-item/food-item-translation/food-item-translation.module';
+import { FoodItemCategoryModule } from './routes/food-item-category/food-item-category.module';
 
 @Module({
   imports: [
@@ -47,7 +49,10 @@ import { TrainerReviewModule } from './routes/trainer-review/trainer-review.modu
     TrainerModule,
     TrainerTranslationModule,
     TrainerClientModule,
-    TrainerReviewModule
+    TrainerReviewModule,
+    FoodItemModule,
+    FoodItemTranslationModule,
+    FoodItemCategoryModule
   ],
   controllers: [AppController],
   providers: [AppService , 
